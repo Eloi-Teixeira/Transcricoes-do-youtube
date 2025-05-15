@@ -80,7 +80,7 @@ async function main(req, res) {
     console.log('Gerando resumos...');
     const resumo = await obterResumoGemini(transcript, res);
     if (!resumo) {
-      return errorHandler(new Error('Não foi possivel criar o resumo'), res, 404);
+      return errorHandler(new Error('Não foi possivel criar o resumo'), res, 500);
     }
 
     let title = resumo

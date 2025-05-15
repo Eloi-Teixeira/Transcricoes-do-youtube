@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "name": "youtube-transcript-summarizer",
+  "name": "youtube-summarizer",
   "version": "1.0.0",
   "description": "A simple Node.js application to fetch and summarize YouTube video transcripts.",
   "main": "./server/server.js",
