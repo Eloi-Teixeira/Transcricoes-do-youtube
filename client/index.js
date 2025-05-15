@@ -40,7 +40,7 @@ const getSummary = async (videoURL) => {
     }
     loadingDiv.classList.add('active');
 
-    const response = await fetch('/summarizer', {
+    const response = await fetch('/api/summarizer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const getSummary = async (videoURL) => {
     });
     clearTimeout(timeout);
     if (!response.ok) {
-      throw new Error('Erro ao obter o resumo.');
+      throw new Error('Erro ao processar a resposta do servidor.');
     }
 
     try {

@@ -31,7 +31,7 @@ const limiter = rateLimit({
 
 app.use('/', limiter);
 app.use(express.json({ limit: '10kb' }));
-app.use('/summarizer', (req, res, next) => {
+app.use('/api/summarizer', (req, res, next) => {
   if (
     !req.body ||
     !req.body.videoURL ||
@@ -47,7 +47,7 @@ app.use('/summarizer', (req, res, next) => {
   }
   next();
 });
-app.use('/summarizer', summarizerRoute);
+app.use('/api/summarizer', summarizerRoute);
 
 app.all('/', (req, res, next) => {
   next(new Error(`Can't find ${req.originalUrl} on this server!`, 404));

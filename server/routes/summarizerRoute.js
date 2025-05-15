@@ -51,7 +51,7 @@ async function obterResumoGemini(texto, res) {
 
     if (resumo.includes('forneça o texto das legendas')) {
       errorHandler(
-        new Error('Texto das legendas não encontrado no resumo'),
+        new Error('Texto das legendas não encontrado no resumo'), 
         res,
         404,
       );
