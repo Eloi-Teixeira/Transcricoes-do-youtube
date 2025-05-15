@@ -26,14 +26,15 @@ const getSummary = async (videoURL) => {
   if (fetchControl) return;
   fetchControl = true;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000); // 20 segundos
+  const timeout = setTimeout(() => controller.abort(), 20000); // 20 segundos
 
   try {
     summary = '';
     title = '';
+    summaryText.innerHTML = '';
 
     submitButton.disabled = true;
-    submitButton.textContent = 'Loading...';
+    submitButton.textContent = 'Carregando...';
     if (summaryContainer.classList.contains('active')) {
       summaryContainer.classList.remove('active');
     }
@@ -221,14 +222,14 @@ function errorHandler(error) {
   errorDiv.textContent = error;
 
   const timerIn = setTimeout(() => {
-    errorDiv.classList.add('active');
+    errorDiv.classList.add('hide');
     const timerOut = setTimeout(() => {
       errorDiv.remove();
-      clearTimeout(timerOut);
       errorControl = false;
-    }, 700);
+      clearTimeout(timerOut);
+    }, 500);
     clearTimeout(timerIn);
-  }, 3500);
+  }, 3200);
 }
 
 // Event Listeners

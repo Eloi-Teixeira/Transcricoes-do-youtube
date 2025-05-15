@@ -395,7 +395,7 @@ a {
   z-index: 1000;
 }
 
-.error-container.active {
+.error-container.hide {
   animation: slide-out 0.5s ease-in-out forwards;
 }
 

@@ -50,11 +50,12 @@ async function obterResumoGemini(texto, res) {
     const resumo = response.candidates[0].content.parts[0].text;
 
     if (resumo.includes('forneça o texto das legendas')) {
-      return errorHandler(
+      errorHandler(
         new Error('Texto das legendas não encontrado no resumo'),
         res,
         404,
       );
+      return null;
     }
     return resumo;
   } catch (error) {
@@ -70,11 +71,17 @@ async function main(req, res) {
   try {
     console.log(`Obtendo transcrição para o vídeo: ${videoURL}`);
     const transcript = await getTranscript(videoURL, res);
+    if (!transcript) {
+      return errorHandler(new Error('Transcrição não encontrada'), res, 404);
+    }
     console.log('Transcrição completa');
     console.log(`Transcrição obtida: ${transcript.length} caracteres`);
 
     console.log('Gerando resumos...');
     const resumo = await obterResumoGemini(transcript, res);
+    if (!resumo) {
+      return errorHandler(new Error('Não foi possivel criar o resumo'), res, 404);
+    }
 
     let title = resumo
       .split('\n')[0]
