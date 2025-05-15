@@ -1,6 +1,3 @@
-[build]
-  publish = "client"  # Ajuste para o diretório onde está seu index.html
-
 [[redirects]]
   from = "/api/*"
   to = "http://localhost:5000/:splat"
