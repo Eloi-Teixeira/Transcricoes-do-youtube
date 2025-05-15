@@ -1,0 +1,20 @@
+{
+  "type": "module",
+  "name": "youtube-transcript-summarizer",
+  "version": "1.0.0",
+  "description": "A simple Node.js application to fetch and summarize YouTube video transcripts.",
+  "main": "./server/server.js",
+  "scripts": {
+    "start": "nodemon ./server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/genai": "^0.13.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "marked": "^15.0.11",
+    "youtube-transcript": "^1.2.1"
+  }
+}
