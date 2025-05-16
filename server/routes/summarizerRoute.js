@@ -3,6 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import 'dotenv/config';
 import express from 'express';
 import { marked } from 'marked';
+import ServerlessHttp from 'serverless-http';
 const router = express.Router();
 
 const prompt = `Resuma o seguinte texto das legendas de um vídeo e formate o resumo em Markdown, utilizando cabeçalhos para os tópicos principais, se aplicável, e listas de pontos-chave.  \n- O título principal (representado pelo '# ' ou '## ') deve ser apenas o tema principal do vídeo, sem incluir termos como "Resumo de" ou "Resumo do vídeo".  \n- Na introdução, mencione o tom e a linguagem usados no vídeo (por exemplo, formal, informal).  \n- Utilize uma estrutura adequada ao conteúdo: \n- Para vídeos com múltiplos tópicos, utilize divisões por cabeçalhos.  \n  - Para vídeos lineares, utilize uma lista de pontos.  \n  - Para vídeos extensos, utilize subtópicos.\n- Ao final, inclua uma conclusão que destaque:  \n  - As mensagens passadas no vídeo.  \n  - A mensagem principal do vídeo.  \n  - A conclusão que o próprio vídeo apresenta, se houver.  \n  - Estruture essa conclusão em tópicos como uma lista.  \n\nLegendas:`;
@@ -107,4 +108,4 @@ function errorHandler(err, res, statusCode) {
 
 router.post('/', main);
 
-export default router;
+export default ServerlessHttp(router);
