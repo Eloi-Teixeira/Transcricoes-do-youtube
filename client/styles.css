@@ -203,6 +203,7 @@ a {
   display: inherit;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 #summary-container #summary-options button {
