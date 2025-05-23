@@ -22,16 +22,36 @@ let errorControl = false;
 let fetchControl = false;
 let errorCount = 0;
 
+const retryFetch = async (url, options, maxRetries = 3) => {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      return response;
+    } catch (error) {
+      lastError = error;
+      const delay = Math.min(1000 * Math.pow(2, attempt), 3000);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+};
+
 // Funções
 const getSummary = async (videoURL, isAnalysis) => {
   if (fetchControl) return;
-  if (errorCount > 5) {
-    errorHandler('Erro ao obter o resumo. Tente novamente mais tarde.');
+  if (errorCount >= 3) {
+    errorHandler(
+      'Muitas tentativas de requisição. Por favor, tente novamente mais tarde.',
+    );
     return;
   }
   fetchControl = true;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000); // 20 segundos
+  const timeout = setTimeout(() => controller.abort(), 30000); // 30 segundos
 
   try {
     summary = '';
@@ -44,8 +64,7 @@ const getSummary = async (videoURL, isAnalysis) => {
       summaryContainer.classList.remove('active');
     }
     loadingDiv.classList.add('active');
-
-    const response = await fetch('/api/summarizer', {
+    const response = await retryFetch('/api/summarizer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -268,7 +287,7 @@ window.addEventListener('scroll', () => {
 
 // Estilização do strong
 
-document.querySelectorAll('#summary-container li').forEach(li => {
+document.querySelectorAll('#summary-container li').forEach((li) => {
   if (
     li.querySelector('strong') &&
     (li.querySelector('ul') || li.querySelector('ol'))

@@ -224,7 +224,6 @@ a {
   margin-left: 2.5rem;
 }
 
-#summary-container strong,
 #summary-container li::before {
   content: '';
   background-color: #ff9700;
