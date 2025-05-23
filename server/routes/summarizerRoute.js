@@ -23,6 +23,9 @@ async function getTranscript(videoId) {
     if (transcript.length === 0) {
       throw new Error('Transcrição não encontrada');
     }
+    if (transcript.length >= 1_000_000) {
+      throw new Error('Transcrição muito grande para processar');
+    }
     return transcript.map(({ text }) => text).join(' ');
   } catch (error) {
     console.error('Erro ao obter a transcrição:', error.message);
