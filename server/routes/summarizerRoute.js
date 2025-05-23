@@ -3,13 +3,12 @@ import { GoogleGenAI } from '@google/genai';
 import 'dotenv/config';
 import express from 'express';
 import { marked } from 'marked';
-import ServerlessHttp from 'serverless-http';
+import prompts from '../utils/prompts.js';
+
 const router = express.Router();
+const geminiAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-const prompt = `Resuma o seguinte texto das legendas de um vídeo e formate o resumo em Markdown, utilizando cabeçalhos para os tópicos principais, se aplicável, e listas de pontos-chave.  \n- O título principal (representado pelo '# ' ou '## ') deve ser apenas o tema principal do vídeo, sem incluir termos como "Resumo de" ou "Resumo do vídeo".  \n- Na introdução, mencione o tom e a linguagem usados no vídeo (por exemplo, formal, informal).  \n- Utilize uma estrutura adequada ao conteúdo: \n- Para vídeos com múltiplos tópicos, utilize divisões por cabeçalhos.  \n  - Para vídeos lineares, utilize uma lista de pontos.  \n  - Para vídeos extensos, utilize subtópicos.\n- Ao final, inclua uma conclusão que destaque:  \n  - As mensagens passadas no vídeo.  \n  - A mensagem principal do vídeo.  \n  - A conclusão que o próprio vídeo apresenta, se houver.  \n  - Estruture essa conclusão em tópicos como uma lista.  \n\nLegendas:`;
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-async function getTranscript(videoId, res) {
+async function getTranscript(videoId) {
   try {
     if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
       const urlObj = new URL(videoId);
@@ -26,14 +25,15 @@ async function getTranscript(videoId, res) {
     }
     return transcript.map(({ text }) => text).join(' ');
   } catch (error) {
-    console.error('Erro ao obter a transcrição:', error);
-    errorHandler(error, res, 404);
+    console.error('Erro ao obter a transcrição:', error.message);
+    return null;
   }
 }
 
-async function obterResumoGemini(texto, res) {
+async function obterResumoGemini(texto, isAnalysis) {
+  const prompt = isAnalysis ? prompts.promptAnalysis : prompts.promptSummary;
   try {
-    const response = await ai.models.generateContent({
+    const response = await geminiAI.models.generateContent({
       model: 'gemini-2.0-flash',
       contents: prompt + texto,
     });
@@ -51,38 +51,39 @@ async function obterResumoGemini(texto, res) {
     const resumo = response.candidates[0].content.parts[0].text;
 
     if (resumo.includes('forneça o texto das legendas')) {
-      errorHandler(
-        new Error('Texto das legendas não encontrado no resumo'), 
-        res,
-        404,
-      );
-      return null;
+      throw new Error('Erro: O texto das legendas não foi fornecido corretamente.');
     }
     return resumo;
   } catch (error) {
-    errorHandler(error, res, 500);
-    console.error('Erro ao fazer a requisição:', error);
+    console.error('Erro ao fazer a requisição:', error.message);
     return null;
   }
 }
 
 async function main(req, res) {
   const videoURL = req.body.videoURL.trim();
+  const isAnalysis = req.body.isAnalysis;
 
   try {
     console.log(`Obtendo transcrição para o vídeo: ${videoURL}`);
-    const transcript = await getTranscript(videoURL, res);
+    const transcript = await getTranscript(videoURL);
     if (!transcript) {
       return errorHandler(new Error('Transcrição não encontrada'), res, 404);
     }
     console.log('Transcrição completa');
     console.log(`Transcrição obtida: ${transcript.length} caracteres`);
 
-    console.log('Gerando resumos...');
-    const resumo = await obterResumoGemini(transcript, res);
+    console.log('Gerando resumo...');
+    let resumo = await obterResumoGemini(transcript, isAnalysis);
     if (!resumo) {
-      return errorHandler(new Error('Não foi possivel criar o resumo'), res, 500);
+      return errorHandler(
+        new Error('Não foi possivel criar o resumo'),
+        res,
+        500,
+      );
     }
+
+    resumo += `\n\n\n Link do vídeo: ${videoURL}`;
 
     let title = resumo
       .split('\n')[0]
@@ -91,21 +92,21 @@ async function main(req, res) {
 
     const html = await marked(resumo);
     console.log('Resumo gerado com sucesso.');
-    return res.status(200).json({
+    res.status(200).json({
       status: true,
       data: { title, text: resumo, html },
     });
   } catch (error) {
     errorHandler(error, res, 500);
-    console.error('Erro ao obter transcrição:', error);
+    console.error('Erro ao obter transcrição:', error.message);
   }
 }
 
 function errorHandler(err, res, statusCode) {
-  console.error(err.stack);
+  console.error(err.message);
   res.status(statusCode).json({ status: false, error: err.message });
 }
 
 router.post('/', main);
 
-export default ServerlessHttp(router);
+export default router;

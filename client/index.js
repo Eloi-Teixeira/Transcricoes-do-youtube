@@ -20,10 +20,15 @@ let summary = '';
 let title = '';
 let errorControl = false;
 let fetchControl = false;
+let errorCount = 0;
 
 // Funções
-const getSummary = async (videoURL) => {
+const getSummary = async (videoURL, isAnalysis) => {
   if (fetchControl) return;
+  if (errorCount > 5) {
+    errorHandler('Erro ao obter o resumo. Tente novamente mais tarde.');
+    return;
+  }
   fetchControl = true;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000); // 20 segundos
@@ -45,7 +50,7 @@ const getSummary = async (videoURL) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ videoURL }),
+      body: JSON.stringify({ videoURL, isAnalysis }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -62,12 +67,14 @@ const getSummary = async (videoURL) => {
       summaryContainer.classList.add('active');
       summary = json.data.text;
       title = json.data.title;
+      errorCount = 0;
       return json.data;
     } catch (err) {
       throw new Error('Erro ao processar a resposta do servidor.');
     }
   } catch (error) {
     console.error(error.message);
+    errorCount++;
     if (error.name === 'AbortError') {
       errorHandler('O tempo da requisição expirou.');
     } else {
@@ -125,7 +132,15 @@ async function formHandler(event) {
     errorHandler('Por favor, coloque uma URL de video do Youtube válida.');
     return;
   }
-  const summary = await getSummary(videoURL);
+  const selectedOption = form.querySelector('input[type="radio"]:checked');
+  let isAnalysis;
+  if (!selectedOption) {
+    isAnalysis = true;
+  } else {
+    isAnalysis = selectedOption.id.includes('analysis');
+  }
+
+  const summary = await getSummary(videoURL, isAnalysis);
   if (!summary || !summaryText) {
     return;
   }
@@ -248,5 +263,16 @@ window.addEventListener('scroll', () => {
     btnToTop.classList.add('active');
   } else {
     btnToTop.classList.remove('active');
+  }
+});
+
+// Estilização do strong
+
+document.querySelectorAll('#summary-container li').forEach(li => {
+  if (
+    li.querySelector('strong') &&
+    (li.querySelector('ul') || li.querySelector('ol'))
+  ) {
+    li.classList.add('has-sublist-title');
   }
 });
