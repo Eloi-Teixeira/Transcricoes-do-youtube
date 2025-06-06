@@ -33,8 +33,17 @@ async function getTranscript(videoId) {
   }
 }
 
-async function obterResumoGemini(texto, isAnalysis) {
-  const prompt = isAnalysis ? prompts.promptAnalysis : prompts.promptSummary;
+async function obterResumoGemini(texto, promptType) {
+  let prompt
+  if (promptType === 'summarize') {
+    prompt = prompts.promptSummary;
+  } else if (promptType === 'analysis') {
+    prompt = prompts.promptAnalysis;
+  } else if (promptType === 'transcript') {
+    prompt = prompts.promptTranscript;
+  } else {
+    throw new Error('Tipo de prompt inválido');
+  }
   try {
     const response = await geminiAI.models.generateContent({
       model: 'gemini-2.0-flash',
@@ -54,7 +63,9 @@ async function obterResumoGemini(texto, isAnalysis) {
     const resumo = response.candidates[0].content.parts[0].text;
 
     if (resumo.includes('forneça o texto das legendas')) {
-      throw new Error('Erro: O texto das legendas não foi fornecido corretamente.');
+      throw new Error(
+        'Erro: O texto das legendas não foi fornecido corretamente.',
+      );
     }
     return resumo;
   } catch (error) {
@@ -65,7 +76,7 @@ async function obterResumoGemini(texto, isAnalysis) {
 
 async function main(req, res) {
   const videoURL = req.body.videoURL.trim();
-  const isAnalysis = req.body.isAnalysis;
+  let promptType = req.body.promptType ? req.body.promptType : 'summarize';
 
   try {
     console.log(`Obtendo transcrição para o vídeo: ${videoURL}`);
@@ -77,7 +88,7 @@ async function main(req, res) {
     console.log(`Transcrição obtida: ${transcript.length} caracteres`);
 
     console.log('Gerando resumo...');
-    let resumo = await obterResumoGemini(transcript, isAnalysis);
+    let resumo = await obterResumoGemini(transcript, promptType);
     if (!resumo) {
       return errorHandler(
         new Error('Não foi possivel criar o resumo'),

@@ -41,7 +41,7 @@ const retryFetch = async (url, options, maxRetries = 3) => {
 };
 
 // Funções
-const getSummary = async (videoURL, isAnalysis) => {
+const getSummary = async (videoURL, promptType) => {
   if (fetchControl) return;
   if (errorCount >= 3) {
     errorHandler(
@@ -69,7 +69,7 @@ const getSummary = async (videoURL, isAnalysis) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ videoURL, isAnalysis }),
+      body: JSON.stringify({ videoURL, promptType }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -152,14 +152,27 @@ async function formHandler(event) {
     return;
   }
   const selectedOption = form.querySelector('input[type="radio"]:checked');
-  let isAnalysis;
-  if (!selectedOption) {
-    isAnalysis = true;
+  let promptType;
+  if (selectedOption) {
+    switch (selectedOption.id) {
+      case 'form-summary':
+        promptType = 'summarize';
+        break;
+      case 'form-analysis':
+        promptType = 'analysis';
+        break;
+      case 'form-transcript':
+        promptType = 'transcript';
+        break;
+      default:
+        promptType = 'summarize';
+        break;
+    }
   } else {
-    isAnalysis = selectedOption.id.includes('analysis');
+    promptType = 'summarize';
   }
 
-  const summary = await getSummary(videoURL, isAnalysis);
+  const summary = await getSummary(videoURL, promptType);
   if (!summary || !summaryText) {
     return;
   }
