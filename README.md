@@ -38,7 +38,7 @@ Uma aplicação web que permite resumir, analisar ou transcrever vídeos do YouT
 1. Clone o repositório:
 ```bash
 git clone <url-do-repositorio>
-cd resumir-videos-youtube
+cd Transcricoes-do-youtube
 ```
 
 2. Instale as dependências:
